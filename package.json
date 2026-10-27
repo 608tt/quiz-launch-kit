@@ -1,0 +1,9 @@
+{
+  "name": "quiz-launch-kit",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs"
+  },
+  "license": "MIT"
+}

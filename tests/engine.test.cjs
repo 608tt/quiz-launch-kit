@@ -1,0 +1,7 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');const {validate,score}=require('../engine.js');const c=JSON.parse(fs.readFileSync('examples/city.json'));
+test('valid example',()=>assert.equal(validate(c),c));
+test('incomplete and out-of-range answers rejected',()=>{assert.throws(()=>score(c,[]));assert.throws(()=>score(c,Array(12).fill(9)));assert.throws(()=>score(c,Array(12).fill(.5)))});
+test('deterministic, bounded and distinct profiles',()=>{const a=score(c,Array(12).fill(0));assert.deepEqual(a,score(c,Array(12).fill(0)));assert(a.vector.every(x=>x>=-1&&x<=1));assert.notEqual(a.winner.id,score(c,Array(12).fill(3)).winner.id)});
+test('bad config rejects duplicate IDs, zero-variance and invalid weights',()=>{for(const change of [x=>x.questions[1].id=x.questions[0].id,x=>x.questions.forEach(q=>q.options.forEach(o=>o.scores[0]=0)),x=>x.results[0].target[0]=2,x=>x.accent='red']){let d=structuredClone(c);change(d);assert.throws(()=>validate(d))}});
+test('tie is stable and reported',()=>{let d=structuredClone(c);d.results[1].target=d.results[0].target;d.results=d.results.slice(0,2);let r=score(d,Array(12).fill(0));assert.equal(r.winner.id,'r1');assert(r.close)});
+test('every example result reachable in seeded simulation',()=>{let seed=987,seen=new Set;for(let i=0;i<15000;i++){const a=c.questions.map(q=>{seed=(seed*1664525+1013904223)>>>0;return Math.floor(seed/4294967296*q.options.length)});seen.add(score(c,a).winner.id)}assert.equal(seen.size,c.results.length)});
